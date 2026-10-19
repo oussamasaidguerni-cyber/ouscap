@@ -13,7 +13,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { Monogram } from "@/brand";
+import { Monogram, Wordmark } from "@/brand";
 import { cn } from "@/lib/cn";
 
 export interface NavItem {
@@ -108,10 +108,6 @@ function SidebarLink({ item }: { item: NavItem }) {
 
 /** Mobile top header with compact branding, search, and a "More" menu. */
 export function MobileHeader({ onSearch, onMenu }: { onSearch?: () => void; onMenu: () => void }) {
-  const { pathname } = useLocation();
-  const current = NAV_ITEMS.find((n) =>
-    n.to === "/" ? pathname === "/" : pathname.startsWith(n.to),
-  );
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-ink/95 px-4 py-3 pt-safe backdrop-blur lg:hidden">
       <button
@@ -123,10 +119,7 @@ export function MobileHeader({ onSearch, onMenu }: { onSearch?: () => void; onMe
       </button>
 
       <div className="flex items-center gap-2">
-        <Monogram size={22} />
-        <span className="text-xs font-semibold tracking-[0.28em] text-fg">
-          {current?.label ?? "OUSCAP"}
-        </span>
+        <Wordmark size={18} />
       </div>
 
       {onSearch ? (
@@ -162,9 +155,9 @@ export function BottomNav({ onQuickAdd }: { onQuickAdd: () => void }) {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-30 px-3 pb-safe lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 px-2 pb-safe lg:hidden"
     >
-      <div className="relative mx-auto mb-2 flex max-w-md items-stretch rounded-2xl border border-white/10 bg-surface/70 p-1.5 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+      <div className="relative mx-auto flex max-w-lg items-stretch rounded-2xl border border-white/10 bg-surface/70 p-1.5 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.7)] backdrop-blur-xl">
         {/* Sliding highlight pill behind the active tab (excludes center slot). */}
         {pillSlot >= 0 ? (
           <span
