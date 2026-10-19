@@ -54,6 +54,10 @@ export default {
           from: { opacity: "1" },
           to: { opacity: "0" },
         },
+        "sheet-up": {
+          from: { opacity: "0", transform: "translateY(100%)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 180ms ease-out",
@@ -62,6 +66,7 @@ export default {
         "mark-rise": "mark-rise 700ms 900ms cubic-bezier(0.16, 1, 0.3, 1) both",
         "word-reveal": "word-reveal 900ms 1200ms cubic-bezier(0.16, 1, 0.3, 1) both",
         "intro-out": "intro-out 400ms 2600ms ease-in forwards",
+        "sheet-up": "sheet-up 280ms cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },

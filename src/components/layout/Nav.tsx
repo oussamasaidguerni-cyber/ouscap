@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -9,6 +10,8 @@ import {
   Settings as SettingsIcon,
   Plus,
   Search,
+  Menu,
+  X,
 } from "lucide-react";
 import { Monogram } from "@/brand";
 import { cn } from "@/lib/cn";
@@ -16,7 +19,7 @@ import { cn } from "@/lib/cn";
 export interface NavItem {
   to: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -28,6 +31,12 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/insights", label: "Insights", icon: Lightbulb },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
+
+/** The four tabs flanking the center Add action on the mobile glass bar. */
+export const BAR_LEFT: NavItem[] = [NAV_ITEMS[0], NAV_ITEMS[1]];
+export const BAR_RIGHT: NavItem[] = [NAV_ITEMS[3], NAV_ITEMS[6]];
+/** Screens that live in the mobile "More" sheet (displaced from the bar). */
+export const SHEET_ITEMS: NavItem[] = [NAV_ITEMS[2], NAV_ITEMS[4], NAV_ITEMS[5]];
 
 /** Desktop sidebar. */
 export function Sidebar({ onQuickAdd, onSearch }: { onQuickAdd: () => void; onSearch?: () => void }) {
@@ -97,88 +106,214 @@ function SidebarLink({ item }: { item: NavItem }) {
   );
 }
 
-/** Mobile top header with compact branding. */
-export function MobileHeader({ onQuickAdd, onSearch }: { onQuickAdd: () => void; onSearch?: () => void }) {
+/** Mobile top header with compact branding, search, and a "More" menu. */
+export function MobileHeader({ onSearch, onMenu }: { onSearch?: () => void; onMenu: () => void }) {
   const { pathname } = useLocation();
   const current = NAV_ITEMS.find((n) =>
     n.to === "/" ? pathname === "/" : pathname.startsWith(n.to),
   );
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-ink/95 px-4 py-3 pt-safe backdrop-blur lg:hidden">
+      <button
+        onClick={onMenu}
+        aria-label="Open menu"
+        className="-ml-1 flex h-10 w-10 items-center justify-center text-muted transition-colors active:text-fg"
+      >
+        <Menu size={20} />
+      </button>
+
       <div className="flex items-center gap-2">
         <Monogram size={22} />
         <span className="text-xs font-semibold tracking-[0.28em] text-fg">
           {current?.label ?? "OUSCAP"}
         </span>
       </div>
-      <div className="flex items-center gap-2">
-        {onSearch ? (
-          <button
-            onClick={onSearch}
-            aria-label="Search"
-            className="flex h-9 w-9 items-center justify-center text-muted transition-colors hover:text-fg"
-          >
-            <Search size={18} />
-          </button>
-        ) : null}
+
+      {onSearch ? (
         <button
-          onClick={onQuickAdd}
-          aria-label="Add transaction"
-          className="flex h-9 w-9 items-center justify-center bg-fg text-ink"
+          onClick={onSearch}
+          aria-label="Search"
+          className="-mr-1 flex h-10 w-10 items-center justify-center text-muted transition-colors active:text-fg"
         >
-          <Plus size={18} />
+          <Search size={18} />
         </button>
-      </div>
+      ) : (
+        <span className="h-10 w-10" />
+      )}
     </header>
   );
 }
 
-/** Mobile bottom navigation. */
+/**
+ * Floating "glass" tab bar: a translucent capsule hovering above the home
+ * indicator, with a highlight pill that slides to the active tab and a raised
+ * center Add action. Mobile only.
+ */
 export function BottomNav({ onQuickAdd }: { onQuickAdd: () => void }) {
-  const primary = NAV_ITEMS.slice(0, 6);
+  const tabs = [...BAR_LEFT, ...BAR_RIGHT];
+  const { pathname } = useLocation();
+  const activeIndex = tabs.findIndex((t) => (t.to === "/" ? pathname === "/" : pathname.startsWith(t.to)));
+
+  // Slot geometry: 5 equal slots; the center (index 2) is the Add button.
+  // Map an active tab index to its slot among the four nav slots.
+  const slotOf = (tabIndex: number) => (tabIndex < 2 ? tabIndex : tabIndex + 1); // skip center
+  const pillSlot = activeIndex >= 0 ? slotOf(activeIndex) : -1;
+
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-ink/95 backdrop-blur lg:hidden">
-      <div className="flex items-stretch justify-around pb-safe">
-        {primary.slice(0, 3).map((item) => (
-          <BottomLink key={item.to} item={item} />
-        ))}
-        <button
-          onClick={onQuickAdd}
-          aria-label="Add transaction"
-          className="flex flex-1 flex-col items-center gap-1 py-2.5"
-        >
-          <span className="flex h-9 w-9 items-center justify-center bg-fg text-ink">
-            <Plus size={18} />
+    <nav
+      aria-label="Primary"
+      className="fixed inset-x-0 bottom-0 z-30 px-3 pb-safe lg:hidden"
+    >
+      <div className="relative mx-auto mb-2 flex max-w-md items-stretch rounded-2xl border border-white/10 bg-surface/70 p-1.5 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+        {/* Sliding highlight pill behind the active tab (excludes center slot). */}
+        {pillSlot >= 0 ? (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-1.5 left-0 w-1/5 px-1 transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none"
+            style={{ transform: `translateX(${pillSlot * 100}%)` }}
+          >
+            <span className="block h-full w-full rounded-xl bg-fg/10 ring-1 ring-inset ring-white/10" />
           </span>
-        </button>
-        {primary.slice(3).map((item) => (
-          <BottomLink key={item.to} item={item} />
+        ) : null}
+
+        {BAR_LEFT.map((item) => (
+          <BarTab key={item.to} item={item} />
         ))}
-        <BottomLink item={NAV_ITEMS[6]} />
+
+        {/* Center Add action — raised, integrated into the capsule. */}
+        <div className="relative flex flex-1 items-center justify-center">
+          <button
+            onClick={onQuickAdd}
+            aria-label="Add transaction"
+            className="-mt-4 flex h-12 w-12 items-center justify-center rounded-full bg-fg text-ink shadow-[0_6px_18px_-4px_rgba(0,0,0,0.8)] transition-transform active:scale-95"
+          >
+            <Plus size={22} strokeWidth={2.4} />
+          </button>
+        </div>
+
+        {BAR_RIGHT.map((item) => (
+          <BarTab key={item.to} item={item} />
+        ))}
       </div>
     </nav>
   );
 }
 
-function BottomLink({ item }: { item: NavItem }) {
+function BarTab({ item }: { item: NavItem }) {
   const Icon = item.icon;
   return (
     <NavLink
       to={item.to}
       end={item.to === "/"}
-      className={({ isActive }) =>
-        cn(
-          "flex flex-1 flex-col items-center gap-1 py-2.5 text-2xs",
-          isActive ? "text-fg" : "text-muted",
-        )
-      }
+      className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-2xs"
     >
       {({ isActive }) => (
         <>
-          <Icon size={18} strokeWidth={isActive ? 2.4 : 1.8} />
-          <span className="truncate">{item.label}</span>
+          <Icon
+            size={22}
+            strokeWidth={isActive ? 2.3 : 1.8}
+            className={cn("relative z-10 transition-colors", isActive ? "text-fg" : "text-muted")}
+          />
+          <span className={cn("relative z-10 transition-colors", isActive ? "text-fg" : "text-muted")}>
+            {item.label}
+          </span>
         </>
       )}
+    </NavLink>
+  );
+}
+
+/**
+ * Slide-up "More" sheet (Option A): quick Search and Add at the top, then the
+ * destinations that don't fit the bar. Navigating closes the sheet.
+ */
+export function NavSheet({
+  open,
+  onClose,
+  onSearch,
+  onQuickAdd,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSearch: () => void;
+  onQuickAdd: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-40 flex flex-col justify-end lg:hidden">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] animate-fade-in" onClick={onClose} aria-hidden />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="More"
+        className="relative z-10 animate-sheet-up rounded-t-2xl border-t border-line bg-surface pb-safe"
+      >
+        <div className="flex items-center justify-between px-5 pb-2 pt-4">
+          <span className="stat-label">Menu</span>
+          <button onClick={onClose} aria-label="Close menu" className="text-muted hover:text-fg">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 px-5 pb-4">
+          <button
+            onClick={() => {
+              onSearch();
+              onClose();
+            }}
+            className="flex items-center justify-center gap-2 border border-line py-2.5 text-xs text-fg active:bg-surface-raised"
+          >
+            <Search size={15} /> Search
+          </button>
+          <button
+            onClick={() => {
+              onQuickAdd();
+              onClose();
+            }}
+            className="flex items-center justify-center gap-2 bg-fg py-2.5 text-xs font-medium text-ink active:opacity-90"
+          >
+            <Plus size={15} /> Add
+          </button>
+        </div>
+
+        <nav className="px-2 pb-5">
+          {SHEET_ITEMS.map((item) => (
+            <SheetLink key={item.to} item={item} onNavigate={onClose} />
+          ))}
+        </nav>
+      </div>
+    </div>
+  );
+}
+
+function SheetLink({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
+  const Icon = item.icon;
+  return (
+    <NavLink
+      to={item.to}
+      end={item.to === "/"}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        cn(
+          "flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors",
+          isActive ? "bg-surface-raised text-fg" : "text-muted active:text-fg active:bg-surface-raised",
+        )
+      }
+    >
+      <Icon size={18} />
+      {item.label}
     </NavLink>
   );
 }
