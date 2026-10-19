@@ -1,0 +1,139 @@
+@import "@fontsource-variable/inter";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  OUSCAP design tokens — strict monochrome.
+
+  Signature experience is dark mode (--ink #0B0B0B). Light mode uses the same
+  design language inverted. Status colors are the only chromatic accents and
+  are restrained + accessible on both themes.
+*/
+@layer base {
+  :root,
+  .light {
+    --ink: 250 250 250;
+    --surface: 255 255 255;
+    --surface-raised: 245 245 245;
+    --line: 229 229 229;
+    --muted: 115 115 115;
+    --fg: 11 11 11;
+
+    --pos: 21 128 61;
+    --neg: 185 28 28;
+    --warn: 180 83 9;
+
+    --ring: 11 11 11;
+
+    color-scheme: light;
+  }
+
+  .dark {
+    --ink: 11 11 11;
+    --surface: 23 23 23;
+    --surface-raised: 32 32 32;
+    --line: 41 41 41;
+    --muted: 163 163 163;
+    --fg: 255 255 255;
+
+    --pos: 52 211 153;
+    --neg: 248 113 113;
+    --warn: 251 191 36;
+
+    --ring: 255 255 255;
+
+    color-scheme: dark;
+  }
+
+  * {
+    border-color: rgb(var(--line));
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-ink text-fg font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgb(var(--fg) / 0.14);
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--ring) / 0.7);
+    outline-offset: 2px;
+  }
+
+  input,
+  button,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer components {
+  /* Tabular numerals for every financial figure, so columns align. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  .hairline {
+    @apply border-line;
+  }
+
+  .card {
+    @apply bg-surface border border-line;
+  }
+
+  .stat-label {
+    @apply text-2xs uppercase tracking-[0.14em] text-muted;
+  }
+
+  /* Scrollbars stay quiet and monochrome. */
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line)) transparent;
+  }
+  .scroll-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: rgb(var(--line));
+    border-radius: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Mobile safe-area helpers (iPhone notch / home indicator). */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .px-safe {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
