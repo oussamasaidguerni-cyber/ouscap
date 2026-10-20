@@ -255,4 +255,36 @@ describe("OUSCAP accounting", () => {
     expect(accountBalance(cash, [adjustUp, adjustDown])).toBe(1200);
     expect(qualifyingTotals([adjustUp, adjustDown]).expenses).toBe(0);
   });
+
+  // 9. Net cash flow status distinguishes positive, zero, and negative.
+  it("reports positive net cash flow when income exceeds expenses", () => {
+    const totals = qualifyingTotals([
+      tx({ type: "income", amount: 50000, accountId: "a" }),
+      tx({ type: "expense", amount: 30000, accountId: "a" }),
+    ]);
+    expect(netCashFlow(totals)).toBeGreaterThan(0);
+  });
+
+  it("reports zero net cash flow when income equals expenses", () => {
+    const totals = qualifyingTotals([
+      tx({ type: "income", amount: 25000, accountId: "a" }),
+      tx({ type: "expense", amount: 25000, accountId: "a" }),
+    ]);
+    expect(netCashFlow(totals)).toBe(0);
+  });
+
+  it("reports negative net cash flow when expenses exceed income", () => {
+    const totals = qualifyingTotals([
+      tx({ type: "income", amount: 10000, accountId: "a" }),
+      tx({ type: "expense", amount: 30000, accountId: "a" }),
+    ]);
+    expect(netCashFlow(totals)).toBeLessThan(0);
+  });
+
+  it("treats transfers as zero cash flow", () => {
+    const totals = qualifyingTotals([
+      tx({ type: "transfer", amount: 50000, accountId: "a", toAccountId: "b" }),
+    ]);
+    expect(netCashFlow(totals)).toBe(0);
+  });
 });

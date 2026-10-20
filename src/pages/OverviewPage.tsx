@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useFinance } from "@/store/FinanceProvider";
 import { usePeriod } from "@/store/PeriodProvider";
 import { PageHeader, PeriodFilter } from "@/components/layout/PageHeader";
@@ -20,18 +20,12 @@ import {
 import { formatDZD, percent } from "@/domain/money";
 import { CONTEXT_LABEL } from "@/domain/types";
 import { todayISO } from "@/lib/dates";
-import { transactionsRepo } from "@/data/repositories";
-import { TransactionForm } from "@/components/TransactionForm";
-import { Dialog } from "@/components/ui/Dialog";
-import { useToast } from "@/components/ui/Toast";
 import { TxRow } from "@/components/TxRow";
 import { SeedPrompt } from "@/components/SeedPrompt";
 
 export function OverviewPage() {
   const finance = useFinance();
   const { range } = usePeriod();
-  const { toast } = useToast();
-  const [addOpen, setAddOpen] = useState(false);
 
   const inPeriod = useMemo(() => filterByRange(finance.transactions, range), [finance.transactions, range]);
   const totals = useMemo(() => qualifyingTotals(inPeriod), [inPeriod]);
@@ -73,7 +67,6 @@ export function OverviewPage() {
   if (finance.isEmpty) {
     return (
       <>
-        <PageHeader title="Overview" description="Your financial command center." />
         <SeedPrompt />
       </>
     );
@@ -113,9 +106,6 @@ export function OverviewPage() {
         actions={
           <>
             <PeriodFilter />
-            <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
-              <Plus size={14} /> Add
-            </Button>
           </>
         }
       />
@@ -135,8 +125,8 @@ export function OverviewPage() {
           <Stat
             label="Net cash flow"
             value={formatDZD(flow, { sign: true })}
-            delta={flow >= 0 ? "Positive flow this period" : "Negative flow this period"}
-            deltaTone={flow >= 0 ? "pos" : "neg"}
+            delta={flow > 0 ? "Positive flow this period" : flow < 0 ? "Negative flow this period" : "Balanced this period"}
+            deltaTone={flow > 0 ? "pos" : flow < 0 ? "neg" : "muted"}
           />
         </StatCell>
       </StatRow>
@@ -310,18 +300,6 @@ export function OverviewPage() {
           )}
         </section>
       </div>
-
-      <Dialog open={addOpen} onClose={() => setAddOpen(false)} title="Add transaction">
-        <TransactionForm
-          finance={finance}
-          onCancel={() => setAddOpen(false)}
-          onSubmit={async (tx) => {
-            await transactionsRepo.create(tx);
-            toast("Transaction added", "pos");
-            setAddOpen(false);
-          }}
-        />
-      </Dialog>
     </>
   );
 }

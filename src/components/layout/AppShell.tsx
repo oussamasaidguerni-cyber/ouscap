@@ -23,7 +23,7 @@ export function AppShell() {
       <Sidebar onQuickAdd={openQuickAdd} onSearch={openPalette} />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileHeader onSearch={openPalette} onMenu={() => setMenuOpen(true)} />
-        <main className="flex-1 px-4 pb-32 pt-5 sm:px-6 lg:px-8 lg:pb-10">
+        <main className="flex-1 px-4 pb-24 pb-safe pt-5 sm:px-6 lg:px-8 lg:pb-10">
           <div className="mx-auto w-full max-w-6xl">
             <Outlet />
           </div>

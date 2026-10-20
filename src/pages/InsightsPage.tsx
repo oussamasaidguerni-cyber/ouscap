@@ -98,7 +98,7 @@ export function InsightsPage() {
               <Stat label="Expenses" value={formatDZD(totals.expenses)} size="sm" />
             </StatCell>
             <StatCell>
-              <Stat label="Net flow" value={formatDZD(flow, { sign: true })} size="sm" deltaTone={flow >= 0 ? "pos" : "neg"} />
+              <Stat label="Net flow" value={formatDZD(flow, { sign: true })} size="sm" deltaTone={flow > 0 ? "pos" : flow < 0 ? "neg" : "muted"} />
             </StatCell>
             <StatCell>
               <Stat label="Avg daily" value={formatDZD(avgDaily)} size="sm" />

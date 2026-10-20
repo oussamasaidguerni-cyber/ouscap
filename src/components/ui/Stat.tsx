@@ -51,5 +51,5 @@ export function StatRow({ children, className }: { children: React.ReactNode; cl
 }
 
 export function StatCell({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("bg-surface px-4 py-4", className)}>{children}</div>;
+  return <div className={cn("min-w-0 bg-surface px-4 py-4", className)}>{children}</div>;
 }
